@@ -1,4 +1,4 @@
-gcc -c -Wall -Werror -Wextra *.c
+gcc -c *.c
 ar -rc libmy.a *.o
 ranlib libmy.a
 ar -rcs libmy.a *.o
