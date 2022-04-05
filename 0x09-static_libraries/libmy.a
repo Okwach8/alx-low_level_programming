@@ -1,5 +1,0 @@
-gcc -c *.c
-ar -rc libmy.a *.o
-ranlib libmy.a
-ar -rcs libmy.a *.o
-gcc main.c -L. -lname -o main
