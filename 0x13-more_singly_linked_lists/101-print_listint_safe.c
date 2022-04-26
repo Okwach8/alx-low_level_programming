@@ -1,46 +1,69 @@
 #include "lists.h"
+
 /**
- * _check_and_print - Check the list recursively and print
- * @head: head of newlist to check
- * @prev: current node on list to check
+ * free_listp - frees a linked list
+ * @head: head of a list.
  *
- * Return: number of nodes
+ * Return: no return.
  */
-int _check_and_print(const listint_t *head, listint_safe *prev)
+void free_listp(listp_t **head)
 {
-	listint_safe node, *tmp;
+	listp_t *temp;
+	listp_t *curr;
 
-	if (head->next == NULL)
+	if (head != NULL)
 	{
-		printf("[%p] %d\n", (void *)head, head->n);
-		return (1);
+		curr = *head;
+		while ((temp = curr) != NULL)
+		{
+			curr = curr->next;
+			free(temp);
+		}
+		*head = NULL;
 	}
-
-	node.next = prev;
-	node.addy = head;
-	tmp = node.next;
-	while (tmp != NULL && tmp->addy != head)
-		tmp = tmp->next;
-	if (tmp != NULL)
-	{
-		printf("-> [%p] %d\n", (void *)head, head->n);
-		return (0);
-	}
-
-	printf("[%p] %d\n", (void *)head, head->n);
-
-	return (1 + _check_and_print(head->next, &node));
 }
+
 /**
- * print_listint_safe - Print a linkint_t with user error safety
- * @head: head of the string
+ * print_listint_safe - prints a linked list.
+ * @head: head of a list.
  *
- * Return: number of nodes in list
+ * Return: number of nodes in the list.
  */
 size_t print_listint_safe(const listint_t *head)
 {
-	if (head == NULL)
-		return (0);
+	size_t nnodes = 0;
+	listp_t *hptr, *new, *add;
 
-	return (_check_and_print(head, NULL));
+	hptr = NULL;
+	while (head != NULL)
+	{
+		new = malloc(sizeof(listp_t));
+
+		if (new == NULL)
+			exit(98);
+
+		new->p = (void *)head;
+		new->next = hptr;
+		hptr = new;
+
+		add = hptr;
+
+		while (add->next != NULL)
+		{
+			add = add->next;
+			if (head == add->p)
+			{
+				printf("-> [%p] %d\n", (void *)head, head->n);
+				free_listp(&hptr);
+				return (nnodes);
+			}
+		}
+
+		printf("[%p] %d\n", (void *)head, head->n);
+		head = head->next;
+		nnodes++;
+	}
+
+	free_listp(&hptr);
+	return (nnodes);
 }
