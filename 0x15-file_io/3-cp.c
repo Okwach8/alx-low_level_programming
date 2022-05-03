@@ -1,59 +1,76 @@
 #include "main.h"
 /**
-  * printerrors - just helping me print errors
-  * @message: the thing to print
-  * @file: the file name
-  * @exitVal: the exit status
-  * Return: void
+  * condi_from - fills memory with a constant byte
+  * @file_from: is the size of the pointer
+  * Return: a int
   */
-void printerrors(char *message, char *file, int exitVal)
+void condi_from(char *file_from)
 {
-	dprintf(STDERR_FILENO, "%s%s\n", message, file);
-	exit(exitVal);
+	dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", file_from);
+	exit(98);
 }
 /**
-  * main - copies data from one file to another
-  * @argc: # of args passed
-  * @argv: pointer to array containing args
-  *
-  * Return: 0 for win
+  * condi_to - fills memory with a constant byte
+  * @file_to: is the size of the pointer
+  * Return: a int
   */
+void condi_to(char *file_to)
+{
+	dprintf(STDERR_FILENO, "Error: Can't write to %s\n", file_to);
+	exit(99);
+}
+/**
+  * condi_fd - fills memory with a constant byte
+  * @file: is the size of the pointer
+  * Return: a int
+  */
+void condi_fd(char *file)
+{
+	dprintf(STDERR_FILENO, "Error: Can't close fd %s\n", file);
+	exit(100);
+}
+/**
+  * main - fills memory with a constant byte
+  * @argc: is the size of the pointer
+  * @argv: a index
+  * Return: a int
+  */
+
 int main(int argc, char **argv)
 {
-	int fddest, fdsrc, readVal, writeVal;
-	char buffer[1024];
+	int fd1 = 0, fd2 = 0, rd1 = 0, wr2 = 0;
+	char *file_from, *file_to, buffer[1024];
 
 	if (argc != 3)
-		printerrors("Usage: cp file_from file_to", "", 97);
-
-	fddest = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0664);
-	if (fddest == -1)
-		printerrors("Error: Can't write to ", argv[2], 99);
-
-	fdsrc = open(argv[1], O_RDONLY);
-	if (fdsrc == -1)
-		printerrors("Error: Can't read from file ", argv[1], 98);
-
-
-	do {
-		readVal = read(fdsrc, buffer, 1024);
-		if (readVal == -1)
-			printerrors("Error: Can't read from file ", argv[1], 98);
-
-		writeVal = write(fddest, buffer, readVal);
-		if (writeVal == -1 || writeVal != readVal)
-			printerrors("Error: Can't write to ", argv[2], 99);
-
-		} while (writeVal == 1024);
-	if (close(fdsrc))
 	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fdsrc);
-		exit(100);
+		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n");
+		exit(97);
 	}
-	if (close(fddest))
+	file_from = argv[1];
+	file_to = argv[2];
+
+	fd1 = open(file_from, O_RDONLY);
+	if (fd1 == -1)
+		condi_from(file_from);
+
+	fd2 = open(file_to, O_WRONLY | O_CREAT | O_TRUNC, 0664);
+	if (fd2 == -1)
+		condi_to(file_to);
+
+	for (rd1 = read(fd1, buffer, 1024); rd1 > 0; rd1 = read(fd1, buffer, 1024))
 	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fddest);
-		exit(100);
+		wr2 = write(fd2, buffer, rd1);
+		if (wr2 == -1)
+			condi_to(file_to);
 	}
+
+	if (rd1 == -1)
+		condi_from(file_from);
+
+	if (close(fd1) == -1)
+		condi_fd(file_from);
+
+	if (close(fd2) == -1)
+		condi_fd(file_to);
 	return (0);
 }
