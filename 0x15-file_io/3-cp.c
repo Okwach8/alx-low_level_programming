@@ -1,59 +1,51 @@
 #include "main.h"
+
+#define MAXSIZE 1024
+#define E STDERR_FILENO
+
 /**
-  * printerrors - just helping me print errors
-  * @message: the thing to print
-  * @file: the file name
-  * @exitVal: the exit status
-  * Return: void
-  */
-void printerrors(char *message, char *file, int exitVal)
+ * main - copy file content into another file
+ * @argc: integer, number of arguments
+ * @v: pointer to an array of string pointers
+ *
+ * Return: 0 on success | 97, if less arguments given | 98, if file_from fails
+ * | 99, if write to file_to fails | 100, if file descriptor can not close
+ */
+int main(int argc, char *v[])
 {
-	dprintf(STDERR_FILENO, "%s%s\n", message, file);
-	exit(exitVal);
-}
-/**
-  * main - copies data from one file to another
-  * @argc: # of args passed
-  * @argv: pointer to array containing args
-  *
-  * Return: 0 for win
-  */
-int main(int argc, char **argv)
-{
-	int fddest, fdsrc, readVal, writeVal;
-	char buffer[1024];
+	int fd1, fd2;
+	char *buff[MAXSIZE];
+	ssize_t bytes;
+	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 
 	if (argc != 3)
-		printerrors("Usage: cp file_from file_to", "", 97);
+		dprintf(E, "Usage: cp file_from file_to\n"), exit(97);
 
-	fddest = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0664);
-	if (fddest == -1)
-		printerrors("Error: Can't write to ", argv[2], 99);
+	fd1 = open(v[1], O_RDONLY);
+	if (fd1 < 0)
+		dprintf(E, "Error: Can't read from file %s\n", v[1]), exit(98);
 
-	fdsrc = open(argv[1], O_RDONLY);
-	if (fdsrc == -1)
-		printerrors("Error: Can't read from file ", argv[1], 98);
+	fd2 = open(v[2], O_WRONLY | O_TRUNC | O_CREAT, mode);
+	if (fd2 < 0)
+		dprintf(E, "Error: Can't write to %s\n", v[2]), exit(99);
 
-
-	do {
-		readVal = read(fdsrc, buffer, 1024);
-		if (readVal == -1)
-			printerrors("Error: Can't read from file ", argv[1], 98);
-
-		writeVal = write(fddest, buffer, readVal);
-		if (writeVal == -1 || writeVal != readVal)
-			printerrors("Error: Can't write to ", argv[2], 99);
-
-		} while (writeVal == 1024);
-	if (close(fdsrc))
+	while ((bytes = read(fd1, buff, MAXSIZE - 1)) > 0)
 	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fdsrc);
-		exit(100);
+		buff[bytes] = '\0';
+		if (write(fd2, buff, bytes) != bytes)
+		{
+			dprintf(E, "Error: Can't write to %s\n", v[2]);
+			exit(99);
+		}
 	}
-	if (close(fddest))
-	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fddest);
-		exit(100);
-	}
+
+	if (bytes < 0)
+		dprintf(E, "Error: Can't read from file %s\n", v[1]), exit(98);
+
+	if ((close(fd1)) < 0)
+		dprintf(E, "Error: Can't close fd %d\n", fd1), exit(100);
+	if ((close(fd2)) < 0)
+		dprintf(E, "Error: Can't close fd %d\n", fd2), exit(100);
+
 	return (0);
 }
