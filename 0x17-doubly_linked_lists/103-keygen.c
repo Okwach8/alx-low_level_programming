@@ -43,4 +43,3 @@ int main(int argc, char *argv[])
 	printf("%s\n", p);
 	return (0);
 }
-
